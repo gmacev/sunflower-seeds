@@ -1,0 +1,21 @@
+body{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.wrapper{
+  display: flex;
+  justify-content: center;
+}
+
+.cell {
+  font-size: 15px;
+  min-width: 80px;
+
+  text-align: center;
+}
+
+.header{
+  font-weight: bold;
+}
