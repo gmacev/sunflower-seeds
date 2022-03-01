@@ -2,10 +2,10 @@ import './App.css'
 import {useEffect, useState} from "react"
 
 // request interval in ms, change at your own risk
-const INTERVAL = 50
+const INTERVAL = 80
 
 // after how many requests to retest offline websites, change at your own risk
-const RETEST_OFFLINE_SITE = INTERVAL * 20
+const RETEST_OFFLINE_SITE = INTERVAL * 12
 
 const urls = [
     "rt.com",
