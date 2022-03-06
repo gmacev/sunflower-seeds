@@ -12,8 +12,12 @@ body{
 .cell {
   font-size: 15px;
   min-width: 80px;
-
   text-align: center;
+  word-break: break-all;
+}
+
+.cell a{
+  word-break: break-all;
 }
 
 .header{
