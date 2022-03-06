@@ -8,19 +8,17 @@ const INTERVAL = 100
 const RETEST_OFFLINE_SITE = INTERVAL * 10
 
 function App() {
-    let [getRequests, setRequests] = useState([])
+    let [getTargetsData, setRequests] = useState([])
     let [getPostFirstLaunch, setPostFirstLaunch] = useState([])
-    let [getTargets, setTargets] = useState([])
 
     useEffect(() =>
     {
         let targets = [], targetsData = []
 
-        fetch(window.location.pathname+'targets.txt').then((response) => response.text())
+        fetch(window.location.pathname+'targets.txt', {mode: 'no-cors'}).then((response) => response.text())
             .then((data) => {
                 targets = data.split('\r\n')
-                setTargets(targets)
-                targets.map(() => targetsData.push({id: 0, online: -1, requests: 0, errors: 0, retest: 0}))
+                targets.map(target => targetsData.push({target: target, online: -1, requests: 0, errors: 0, retest: 0}))
             })
 
         function check(index, timeOut)
@@ -44,10 +42,10 @@ function App() {
 
             const timeout = setTimeout(() => abortAndUpdateStats(controller, index), 3000)
 
-            if(getRequests.length === 0)
-                getRequests = targetsData
+            if(getTargetsData.length === 0)
+                getTargetsData = targetsData
 
-            if(getRequests[index].online) {
+            if(getTargetsData[index].online) {
                 const rand = '/?' + Math.random() * 1000
 
                 fetch("http://" + targets[index] + rand, options)
@@ -59,8 +57,8 @@ function App() {
                     })
                     .catch(e => {
                         if (e) {
-                            if(getRequests[index].retest <= 0)
-                                getRequests[index].retest = RETEST_OFFLINE_SITE
+                            if(getTargetsData[index].retest <= 0)
+                                getTargetsData[index].retest = RETEST_OFFLINE_SITE
 
                             clearTimeout(timeout)
 
@@ -72,7 +70,7 @@ function App() {
                     })
             }
 
-            else if(getRequests[index].retest-- <= 0) {
+            else if(getTargetsData[index].retest-- <= 0) {
                 getPostFirstLaunch[index] = false
                 setPostFirstLaunch(getPostFirstLaunch)
 
@@ -81,9 +79,8 @@ function App() {
 
             function setRequestsAndStatus(online, error)
             {
-                const arr = [...getRequests]
-
-                arr[index].id = index
+                const arr = [...getTargetsData]
+                
                 arr[index].online = online
                 online && arr[index].requests++
                 error && arr[index].errors++
@@ -124,12 +121,21 @@ function App() {
                 <div className="header cell">Errors</div>
             </div>
             {
-                (getRequests.length > 0 && getTargets.length > 0) ? getRequests.map((req, index) => {
+                (getTargetsData.length > 0) ? getTargetsData.map((target, index) => {
                     return <div className="d-flex align-items-center justify-content-center gap-3 mt-1 w-100" key={index}>
-                        <div className="cell text-start" style={{width: "200px"}}><a href={"http://"+getTargets[index]} rel="noreferrer" target="_blank" title={getTargets[index]}>{getTargets[index].length > 25 ? `${getTargets[index].substring(0, 25)}...` : getTargets[index]}</a></div>
-                        <div className="cell">{req.online === -1 ? <span style={{color: "grey"}}>Checking...</span> : req.online ? <span className="text-success">Online</span> : <span className="text-danger">Unreachable</span>}</div>
-                        <div className="cell">{req.requests}</div>
-                        <div className="cell">{req.errors}</div>
+                        <div className="cell text-start" style={{width: "200px"}}>
+                            <a
+                                href={"http://"+target.target}
+                                rel="noreferrer" target="_blank"
+                                title={target.target}>{target.target.length > 25 ? `${target.target.substring(0, 25)}...` : target.target}
+                            </a>
+                        </div>
+                        <div className="cell">{target.online === -1 ?
+                            <span style={{color: "grey"}}>Checking...</span> : target.online ?
+                                <span className="text-success">Online</span> : <span className="text-danger">Unreachable</span>}
+                        </div>
+                        <div className="cell">{target.requests}</div>
+                        <div className="cell">{target.errors}</div>
                     </div>
                 })
                 :
