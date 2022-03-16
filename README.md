@@ -2,9 +2,8 @@
 
 **Installation:**
 
-1. package.json:
+Host the files inside the *build* folder or build the app yourself by running:
 
-    `"homepage": "https://yourwebsite.com/dir"`
+npm run build
 
-2. npm run build
-3. Optional: add your targets to targets.txt
+Optional - add your targets to targets.txt
