@@ -8,7 +8,7 @@ const INTERVAL = 100
 const RETEST_OFFLINE_SITE = INTERVAL * 10
 
 function App() {
-    let [getTargetsData, setRequests] = useState([])
+    let [getTargetsData, setTargetsData] = useState([])
     let [getPostFirstLaunch, setPostFirstLaunch] = useState([])
 
     useEffect(() =>
@@ -18,7 +18,7 @@ function App() {
         fetch(window.location.pathname+'targets.txt', {mode: 'no-cors'}).then((response) => response.text())
             .then((data) => {
                 targets = data.split('\r\n')
-                targets.map(target => targetsData.push({target: target, online: -1, requests: 0, errors: 0, retest: 0}))
+                targets.map(target => targetsData.push({target: target, online: -1, requests: 0, errors: 0, retest: 0, checked: false}))
             })
 
         function check(index, timeOut)
@@ -45,13 +45,16 @@ function App() {
             if(getTargetsData.length === 0)
                 getTargetsData = targetsData
 
-            if(getTargetsData[index].online) {
+            if(getTargetsData[index].online && !getTargetsData[index].checked) {
+                if(getTargetsData[index].online === -1)
+                    getTargetsData[index].checked = true
+
                 const rand = '/?' + Math.random() * 1000
 
                 fetch("http://" + targets[index] + rand, options)
                     .then(res => {
                         clearTimeout(timeout)
-                        setRequestsAndStatus(true, false)
+                        setTargetsDataAndStatus(true, false)
 
                         return res
                     })
@@ -63,31 +66,33 @@ function App() {
                             clearTimeout(timeout)
 
                             if (e.code === 20)
-                                return
+                                return getTargetsData[index].checked = false
 
-                            setRequestsAndStatus(false, true)
+                            setTargetsDataAndStatus(false, true)
                         }
                     })
             }
 
             else if(getTargetsData[index].retest-- <= 0) {
+
                 getPostFirstLaunch[index] = false
                 setPostFirstLaunch(getPostFirstLaunch)
 
-                setRequestsAndStatus(-1, false)
+                setTargetsDataAndStatus(-1, false)
             }
 
-            function setRequestsAndStatus(online, error)
+            function setTargetsDataAndStatus(online, error)
             {
                 const arr = [...getTargetsData]
                 
                 arr[index].online = online
-                online && arr[index].requests++
+                if(online && online !== -1) arr[index].requests++
                 error && arr[index].errors++
+                if(online !== -1) getTargetsData[index].checked = false
 
                 arr.sort((a, b) => (!!a.online === b.online) ? 0 : !!a.online ? -1 : 1)
 
-                setRequests(arr)
+                setTargetsData(arr)
             }
         }
 
